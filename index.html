@@ -1,1 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крипто-Хомяк 🐹💎</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #f7931a;
+            margin-bottom: 10px;
+        }
+        .hamster-icon {
+            font-size: 50px;
+            margin: 10px;
+        }
+        .price-display {
+            font-size: 2.5em;
+            margin: 20px 0;
+            color: #0f0;
+        }
+        .up {
+            color: #0f0;
+        }
+        .down {
+            color: #f00;
+        }
+        .balance {
+            font-size: 1.5em;
+            margin: 15px 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        #buy {
+            background-color: #0f0;
+            color: #000;
+        }
+        #sell {
+            background-color: #f00;
+            color: #fff;
+        }
+        #chart {
+            margin: 20px auto;
+            width: 100%;
+            height: 200px;
+            background-color: #2a2a2a;
+            border-radius: 5px;
+        }
+        .history {
+            margin-top: 20px;
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Крипто-Хомяк 🐹💎</h1>
+        <div class="hamster-icon">🐹</div>
+        <div class="price-display" id="price">$1.00</div>
+        <div class="balance" id="balance">Баланс: $10.00 | HMR: 0</div>
+        
+        <div class="controls">
+            <button id="buy">Купить HMR</button>
+            <button id="sell">Продать HMR</button>
+        </div>
+        
+        <div id="chart"></div>
+        
+        <div class="history" id="history">
+            <p>Добро пожаловать в трейдинг по-хомячьи!</p>
+        </div>
+    </div>
 
+    <script>
+        // Начальные данные
+        let balance = 10.00; // $
+        let hmr = 0; // Количество HMR
+        let currentPrice = 1.00; // Текущая цена
+        let priceHistory = [1.00]; // История цен для графика
+        let lastChange = 0; // Последнее изменение цены
+
+        // Элементы DOM
+        const priceElement = document.getElementById('price');
+        const balanceElement = document.getElementById('balance');
+        const historyElement = document.getElementById('history');
+        const buyButton = document.getElementById('buy');
+        const sellButton = document.getElementById('sell');
+        const chartElement = document.getElementById('chart');
+
+        // Обновляем интерфейс
+        function updateUI() {
+            priceElement.textContent = `$${currentPrice.toFixed(2)}`;
+            balanceElement.textContent = `Баланс: $${balance.toFixed(2)} | HMR: ${hmr.toFixed(2)}`;
+            
+            // Добавляем анимацию изменения цены
+            if (lastChange > 0) {
+                priceElement.className = 'price-display up';
+            } else if (lastChange < 0) {
+                priceElement.className = 'price-display down';
+            } else {
+                priceElement.className = 'price-display';
+            }
+            
+            // Рисуем примитивный график
+            drawChart();
+        }
+
+        // Рисуем график (упрощенный)
+        function drawChart() {
+            chartElement.innerHTML = '';
+            const maxPrice = Math.max(...priceHistory);
+            const minPrice = Math.min(...priceHistory);
+            const scale = 180 / (maxPrice - minPrice + 0.1);
+            
+            priceHistory.forEach((price, index) => {
+                const bar = document.createElement('div');
+                bar.style.display = 'inline-block';
+                bar.style.width = '2px';
+                bar.style.height = `${(price - minPrice) * scale}px`;
+                bar.style.margin = '0 1px';
+                bar.style.backgroundColor = price >= priceHistory[Math.max(0, index - 1)] ? '#0f0' : '#f00';
+                bar.style.verticalAlign = 'bottom';
+                chartElement.appendChild(bar);
+            });
+        }
+
+        // Меняем цену (псевдо-рандомно, но без резких скачков)
+        function updatePrice() {
+            const change = (Math.random() - 0.5) * 0.2; // -10% to +10%
+            lastChange = change;
+            currentPrice += change;
+            
+            // Не даем цене уйти в минус или слишком высоко
+            if (currentPrice < 0.1) currentPrice = 0.1;
+            if (currentPrice > 5) currentPrice = 5;
+            
+            priceHistory.push(currentPrice);
+            if (priceHistory.length > 50) priceHistory.shift();
+            
+            updateUI();
+        }
+
+        // Покупаем HMR
+        buyButton.addEventListener('click', () => {
+            if (balance >= currentPrice) {
+                const bought = 1; // Покупаем по 1 HMR за раз
+                hmr += bought;
+                balance -= currentPrice * bought;
+                addToHistory(`Куплено ${bought} HMR за $${(currentPrice * bought).toFixed(2)}`);
+                updateUI();
+            } else {
+                addToHistory("Недостаточно денег!");
+            }
+        });
+
+        // Продаем HMR
+        sellButton.addEventListener('click', () => {
+            if (hmr >= 1) {
+                const sold = 1; // Продаем по 1 HMR за раз
+                hmr -= sold;
+                balance += currentPrice * sold;
+                addToHistory(`Продано ${sold} HMR за $${(currentPrice * sold).toFixed(2)}`);
+                updateUI();
+            } else {
+                addToHistory("Нет HMR для продажи!");
+            }
+        });
+
+        // Добавляем запись в историю
+        function addToHistory(message) {
+            const entry = document.createElement('p');
+            entry.textContent = message;
+            historyElement.prepend(entry);
+            if (historyElement.children.length > 10) {
+                historyElement.removeChild(historyElement.lastChild);
+            }
+        }
+
+        // Обновляем цену каждые 2 секунды
+        setInterval(updatePrice, 2000);
+        
+        // Инициализация
+        updateUI();
+    </script>
+</body>
+</html>
